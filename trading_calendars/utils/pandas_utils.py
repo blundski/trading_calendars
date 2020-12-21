@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from pytz import UTC
 
 
 def days_at_time(days, t, tz, day_offset=0):
@@ -22,20 +23,20 @@ def days_at_time(days, t, tz, day_offset=0):
     Examples
     --------
     In the example below, the times switch from 13:45 to 12:45 UTC because
-    March 13th is the daylight savings transition for US/Eastern.  All the
-    times are still 8:45 when interpreted in US/Eastern.
+    March 13th is the daylight savings transition for UAmerica/New_York. All
+    the times are still 8:45 when interpreted in America/New_York.
 
     >>> import pandas as pd; import datetime; import pprint
     >>> dts = pd.date_range('2016-03-12', '2016-03-14')
-    >>> dts_at_845 = days_at_time(dts, datetime.time(8, 45), 'US/Eastern')
-    >>> pprint.pprint([str(dt) for dt in dts_at_845])
+    >>> dts_845 = days_at_time(dts, datetime.time(8, 45), 'America/New_York')
+    >>> pprint.pprint([str(dt) for dt in dts_845])
     ['2016-03-12 13:45:00+00:00',
      '2016-03-13 12:45:00+00:00',
      '2016-03-14 12:45:00+00:00']
     """
     days = pd.DatetimeIndex(days).tz_localize(None)
     if len(days) == 0:
-        return days.tz_localize('UTC')
+        return days.tz_localize(UTC)
 
     # Offset days without tz to avoid timezone issues.
     delta = pd.Timedelta(
@@ -44,7 +45,7 @@ def days_at_time(days, t, tz, day_offset=0):
         minutes=t.minute,
         seconds=t.second,
     )
-    return (days + delta).tz_localize(tz).tz_convert('UTC')
+    return (days + delta).tz_localize(tz).tz_convert(UTC)
 
 
 def vectorized_sunday_to_monday(dtix):
@@ -64,3 +65,9 @@ def vectorized_sunday_to_monday(dtix):
     values = dtix.values.copy()
     values[dtix.weekday == 6] += np.timedelta64(1, 'D')
     return pd.DatetimeIndex(values)
+
+
+try:
+    from pandas import testing  # noqa: rexport
+except ImportError:
+    from pandas.util import testing  # noqa: rexport

@@ -23,12 +23,6 @@ import versioneer
 DISTNAME = "trading_calendars"
 DESCRIPTION = """trading_calendars is a Python library with \
 securities exchange calendars used by Quantopian's Zipline."""
-LONG_DESCRIPTION = """trading_calendars is a Python library with
-securities exchange calendars used by Quantopian's Zipline.
-
-.. _Quantopian Inc: https://www.quantopian.com
-.. _Zipline: http://zipline.io
-"""
 
 AUTHOR = "Quantopian Inc"
 AUTHOR_EMAIL = "opensource@quantopian.com"
@@ -41,8 +35,9 @@ classifiers = [
     "Programming Language :: Python :: 2",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 2.7",
-    "Programming Language :: Python :: 3.4",
     "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
     "License :: OSI Approved :: Apache Software License",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering",
@@ -50,19 +45,26 @@ classifiers = [
     "Operating System :: OS Independent"
 ]
 
-
 reqs = [
-    "lru-dict",
     "numpy",
     "pandas",
+    "python-dateutil",
     "pytz",
+    "six",
     "toolz",
 ]
 
+with open('README.md') as f:
+    LONG_DESCRIPTION = f.read()
 
 if __name__ == '__main__':
     setup(
         name=DISTNAME,
+        entry_points={
+            'console_scripts': [
+                'tcal = trading_calendars.tcal:main',
+            ],
+        },
         cmdclass=versioneer.get_cmdclass(),
         version=versioneer.get_version(),
         author=AUTHOR,
@@ -72,8 +74,18 @@ if __name__ == '__main__':
         url=URL,
         classifiers=classifiers,
         long_description=LONG_DESCRIPTION,
+        long_description_content_type='text/markdown',
         packages=find_packages(
             include=['trading_calendars', 'trading_calendars.*']
         ),
         install_requires=reqs,
+        extras_require={
+            "dev": [
+                "flake8",
+                "pytest",
+                "pytest-benchmark",
+                "parameterized",
+                "pytest-xdist",
+            ],
+        },
     )

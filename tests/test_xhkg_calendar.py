@@ -1,6 +1,7 @@
 from datetime import time
 from unittest import TestCase
 import pandas as pd
+from pytz import UTC
 
 from .test_trading_calendar import ExchangeCalendarTestBase
 from .test_utils import T
@@ -23,13 +24,13 @@ class XHKGCalendarTestCase(ExchangeCalendarTestBase, TestCase):
         # range should fail.
 
         with self.assertRaises(ValueError) as e:
-            self.calendar_class(T('1980-12-31'), T('2000-01-01'))
+            self.calendar_class(T('1958-12-31'), T('2000-01-01'))
 
         self.assertEqual(
             str(e.exception),
             (
-                'the lunisolar holidays have only been computed back to 1981,'
-                ' cannot instantiate the XHKG calendar back to 1980'
+                'the lunisolar holidays have only been computed back to 1960,'
+                ' cannot instantiate the XHKG calendar back to 1958'
             ),
         )
 
@@ -42,6 +43,38 @@ class XHKGCalendarTestCase(ExchangeCalendarTestBase, TestCase):
                 'the lunisolar holidays have only been computed through 2049,'
                 ' cannot instantiate the XHKG calendar in 2050'
             ),
+        )
+
+    def test_session_break(self):
+        # Test that the calendar correctly reports itself as closed during
+        # session break
+        normal_minute = pd.Timestamp('2003-01-27 03:30:00')
+        break_minute = pd.Timestamp('2003-01-27 04:30:00')
+
+        self.assertTrue(self.calendar.is_open_on_minute(normal_minute))
+        self.assertFalse(self.calendar.is_open_on_minute(break_minute))
+        # Make sure that ignoring breaks indicates the exchange is open
+        self.assertTrue(
+            self.calendar.is_open_on_minute(break_minute, ignore_breaks=True)
+        )
+
+        current_session_label = self.calendar.minute_to_session_label(
+            normal_minute,
+            direction="none"
+        )
+        self.assertEqual(
+            current_session_label,
+            self.calendar.minute_to_session_label(
+                break_minute,
+                direction="previous"
+            )
+        )
+        self.assertEqual(
+            current_session_label,
+            self.calendar.minute_to_session_label(
+                break_minute,
+                direction="next"
+            )
         )
 
     def test_lunar_new_year_2003(self):
@@ -67,8 +100,8 @@ class XHKGCalendarTestCase(ExchangeCalendarTestBase, TestCase):
         # 23 24 25 26 27 28  1
         #  2
 
-        start_session = pd.Timestamp('2003-01-27', tz='UTC')
-        end_session = pd.Timestamp('2003-02-28', tz='UTC')
+        start_session = pd.Timestamp('2003-01-27', tz=UTC)
+        end_session = pd.Timestamp('2003-02-28', tz=UTC)
         sessions = self.calendar.sessions_in_range(start_session, end_session)
 
         holidays = pd.to_datetime(
@@ -103,8 +136,8 @@ class XHKGCalendarTestCase(ExchangeCalendarTestBase, TestCase):
         #  4  5  6  7  8  9 10
         # 11 12 13 14 15 16
 
-        start_session = pd.Timestamp('2018-02-12', tz='UTC')
-        end_session = pd.Timestamp('2018-03-15', tz='UTC')
+        start_session = pd.Timestamp('2018-02-12', tz=UTC)
+        end_session = pd.Timestamp('2018-03-15', tz=UTC)
         closes = self.calendar.session_closes_in_range(
             start_session,
             end_session,
@@ -257,8 +290,8 @@ class XHKGCalendarTestCase(ExchangeCalendarTestBase, TestCase):
             # Christmas Eve and New Year's Eve are both Sunday this year
         ]
 
-        start_session = pd.Timestamp('2017-01-02', tz='UTC')
-        end_session = pd.Timestamp('2017-12-29', tz='UTC')
+        start_session = pd.Timestamp('2017-01-02', tz=UTC)
+        end_session = pd.Timestamp('2017-12-29', tz=UTC)
         closes = self.calendar.session_closes_in_range(
             start_session,
             end_session,

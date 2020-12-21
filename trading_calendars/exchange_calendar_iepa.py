@@ -9,6 +9,7 @@ from pandas.tseries.holiday import (
 )
 from pandas import Timestamp
 from pytz import timezone
+from pytz import UTC
 
 from trading_calendars import TradingCalendar
 from trading_calendars.trading_calendar import HolidayCalendar
@@ -25,14 +26,14 @@ class IEPAExchangeCalendar(TradingCalendar):
     """
     Exchange calendar for ICE US (IEPA).
 
-    Open Time: 8pm, US/Eastern
-    Close Time: 6pm, US/Eastern
+    Open Time: 8pm, America/New_York
+    Close Time: 6pm, America/New_York
 
     https://www.theice.com/publicdocs/futures_us/ICE_Futures_US_Regular_Trading_Hours.pdf # noqa
     """
     name = 'IEPA'
 
-    tz = timezone("US/Eastern")
+    tz = timezone("America/New_York")
 
     open_times = (
         (None, time(20, 1)),
@@ -65,7 +66,7 @@ class IEPAExchangeCalendar(TradingCalendar):
             USNationalDaysofMourning,
             # ICE was only closed on the first day of the Hurricane Sandy
             # closings (was not closed on 2012-10-30)
-            [Timestamp('2012-10-29', tz='UTC')]
+            [Timestamp('2012-10-29', tz=UTC)]
         ))
 
     @property

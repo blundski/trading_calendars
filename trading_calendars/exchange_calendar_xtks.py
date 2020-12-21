@@ -2,6 +2,7 @@ from datetime import time
 from itertools import chain
 import pandas as pd
 from pytz import timezone
+from pytz import UTC
 
 from .trading_calendar import (
     TradingCalendar,
@@ -18,26 +19,34 @@ from .xtks_holidays import (
     VernalEquinoxes,
     GreeneryDayThrough2006,
     ShowaDay,
-    ConstitutionMemorialDay,
+    ConstitutionMemorialDayThrough2006,
+    ConstitutionMemorialDay2007Onwards,
     GreeneryDay2007Onwards,
     CitizensHolidayGoldenWeek,
     ChildrensDay,
     MarineDayThrough2002,
-    MarineDay2003Onwards,
-    MountainDay,
+    MarineDay2003OnwardsThrough2019,
+    MarineDay2020,
+    MarineDay2021Onwards,
+    MountainDayThrough2019,
+    MountainDay2020,
+    MountainDay2021Onwards,
     AutumnalEquinoxes,
     CitizensHolidaySilverWeek,
     RespectForTheAgedDayThrough2002,
     RespectForTheAgedDay2003Onwards,
-    HealthAndSportsDay,
+    HealthAndSportsDayThrough2019,
+    HealthAndSportsDay2020,
+    HealthAndSportsDay2021Onwards,
     CultureDay,
     LaborThanksgivingDay,
     EmperorAkihitoBirthday,
     EmperorNaruhitoBirthday,
+    Misc2019Holidays
 )
 
 
-XTKS_START_DEFAULT = pd.Timestamp('2000-01-01', tz='UTC')
+XTKS_START_DEFAULT = pd.Timestamp('2000-01-01', tz=UTC)
 
 
 class XTKSExchangeCalendar(TradingCalendar):
@@ -51,7 +60,7 @@ class XTKSExchangeCalendar(TradingCalendar):
     NOTE: we are treating the two sessions per day as one session for now,
     because we will not be handling minutely data in the immediate future.
 
-    Regularly-Observed Holidays (see tse_holidays.py for more info):
+    Regularly-Observed Holidays (see xtks_holidays.py for more info):
     - New Year's Holidays (Dec. 31 - Jan. 3)
     - Coming of Age Day (second Monday of January)
     - National Foundation Day (Feb. 11)
@@ -98,16 +107,23 @@ class XTKSExchangeCalendar(TradingCalendar):
             NationalFoundationDay,
             GreeneryDayThrough2006,
             ShowaDay,
-            ConstitutionMemorialDay,
+            ConstitutionMemorialDayThrough2006,
+            ConstitutionMemorialDay2007Onwards,
             GreeneryDay2007Onwards,
             CitizensHolidayGoldenWeek,
             ChildrensDay,
             MarineDayThrough2002,
-            MarineDay2003Onwards,
-            MountainDay,
+            MarineDay2003OnwardsThrough2019,
+            MarineDay2020,
+            MarineDay2021Onwards,
+            MountainDayThrough2019,
+            MountainDay2020,
+            MountainDay2021Onwards,
             RespectForTheAgedDayThrough2002,
             RespectForTheAgedDay2003Onwards,
-            HealthAndSportsDay,
+            HealthAndSportsDayThrough2019,
+            HealthAndSportsDay2020,
+            HealthAndSportsDay2021Onwards,
             CultureDay,
             LaborThanksgivingDay,
             EmperorAkihitoBirthday,
@@ -120,4 +136,5 @@ class XTKSExchangeCalendar(TradingCalendar):
             VernalEquinoxes,
             AutumnalEquinoxes,
             CitizensHolidaySilverWeek,
+            Misc2019Holidays,
         ))

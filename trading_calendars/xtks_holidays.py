@@ -1,6 +1,5 @@
 from dateutil.relativedelta import MO
 from datetime import timedelta
-from functools import partial
 from pandas import (
     Timestamp,
     DateOffset,
@@ -12,41 +11,24 @@ from pandas.tseries.holiday import (
 )
 
 from .common_holidays import new_years_day
-from .trading_calendar import SUNDAY, WEEKENDS
+from .trading_calendar import SUNDAY
 
 
-def is_holiday_or_weekend(holidays, dt):
+def sunday_to_tuesday(dt):
     """
-    Given a list of holidays, return whether dt is a holiday
-    or it is on a weekend.
+    If holiday falls on Sunday, use Tuesday instead.
     """
-    one_day = timedelta(days=1)
-
-    for h in holidays:
-        if dt in h.dates(dt - one_day, dt + one_day) or \
-                dt.weekday() in WEEKENDS:
-            return True
-
-    return False
+    if dt.weekday() == SUNDAY:
+        return dt + timedelta(2)
+    return dt
 
 
-def next_non_holiday_weekday(holidays, dt):
+def sunday_to_wednesday(dt):
     """
-    If a holiday falls on a Sunday, observe it on the next non-holiday weekday.
-
-    Parameters
-    ----------
-    holidays : list[pd.tseries.holiday.Holiday]
-        list of holidays
-    dt : pd.Timestamp
-        date of holiday.
+    If holiday falls on Sunday, use Wednesday instead.
     """
-    day_of_week = dt.weekday()
-
-    if day_of_week == SUNDAY:
-        while is_holiday_or_weekend(holidays, dt):
-            dt += timedelta(1)
-
+    if dt.weekday() == SUNDAY:
+        return dt + timedelta(3)
     return dt
 
 
@@ -105,6 +87,7 @@ VernalEquinoxes = [
     Timestamp('2017-03-20'),
     Timestamp('2018-03-21'),
     Timestamp('2019-03-21'),
+    Timestamp('2020-03-20')
 ]
 
 # The Golden Week holidays (late April - early May) are listed in reverse
@@ -112,7 +95,7 @@ VernalEquinoxes = [
 # so that that if an earlier holiday (Constitution Memorial Day, Greenery Day)
 # falls on a Sunday, that holiday can be observed on the next non-holiday
 # weekday.
-
+# Clash with GreeneryDay and ConstitutionMemorialDay
 ChildrensDay = Holiday(
     "Children's Day",
     month=5,
@@ -125,12 +108,13 @@ ChildrensDay = Holiday(
 # In 2007, Greenery Day was moved from April 29 to May 4, replacing the
 # unnamed citizen's holiday. For more info, see:
 # https://en.wikipedia.org/wiki/Golden_Week_(Japan)
+# Clash with ChildrensDay and ConstitutionMemorialDay
 GreeneryDay2007Onwards = Holiday(
     "Greenery Day",
     month=5,
     day=4,
     start_date='2007-01-01',
-    observance=partial(next_non_holiday_weekday, [ChildrensDay]),
+    observance=sunday_to_tuesday,
 )
 
 CitizensHolidayGoldenWeek = Holiday(
@@ -158,12 +142,22 @@ ShowaDay = Holiday(
     observance=sunday_to_monday,
 )
 
-ConstitutionMemorialDay = Holiday(
+# Clash with ChildrensDay and GreeneryDay
+ConstitutionMemorialDay2007Onwards = Holiday(
     "Constitution Memorial Day",
     month=5,
     day=3,
-    observance=partial(next_non_holiday_weekday,
-                       [GreeneryDay2007Onwards, ChildrensDay])
+    start_date='2007-01-01',
+    observance=sunday_to_wednesday,
+)
+
+# Clash with ChildrensDay
+ConstitutionMemorialDayThrough2006 = Holiday(
+    "Constituion Memorial Day",
+    month=5,
+    day=3,
+    end_date='2007-01-01',
+    observance=sunday_to_tuesday,
 )
 
 
@@ -175,19 +169,53 @@ MarineDayThrough2002 = Holiday(
     observance=sunday_to_monday,
 )
 
-MarineDay2003Onwards = Holiday(
-    "Marine Day (2003 onwards)",
+MarineDay2003OnwardsThrough2019 = Holiday(
+    "Marine Day (2003 - 2019)",
     month=7,
     day=1,
     offset=DateOffset(weekday=MO(3)),
     start_date='2003-01-01',
+    end_date='2020-01-01',
 )
 
-MountainDay = Holiday(
-    "Mountain Day",
+# Changed due to Tokyo Olympics
+MarineDay2020 = Holiday(
+    "Marine Day (2020)",
+    month=7,
+    day=23,
+    year=2020,
+)
+
+MarineDay2021Onwards = Holiday(
+    "Marine Day (2021 onwards)",
+    month=7,
+    day=1,
+    offset=DateOffset(weekday=MO(3)),
+    start_date='2021-01-01',
+)
+
+MountainDayThrough2019 = Holiday(
+    "Mountain Day (through 2019)",
     month=8,
     day=11,
     start_date='2016-01-01',
+    end_date='2020-01-01',
+    observance=sunday_to_monday,
+)
+
+# Changed due to Tokyo Olympics
+MountainDay2020 = Holiday(
+    "Mountain Day (2020)",
+    month=8,
+    day=10,
+    year=2020,
+)
+
+MountainDay2021Onwards = Holiday(
+    "Mountain Day (2021 onwards)",
+    month=8,
+    day=11,
+    start_date="2021-01-01",
     observance=sunday_to_monday,
 )
 
@@ -213,6 +241,7 @@ AutumnalEquinoxes = [
     Timestamp('2017-09-23'),
     Timestamp('2018-09-24'),
     Timestamp('2019-09-23'),
+    Timestamp('2020-09-22'),
 ]
 
 # If the Autumnal Equinox falls on a Wednesday, the Tuesday before
@@ -240,11 +269,28 @@ RespectForTheAgedDay2003Onwards = Holiday(
     start_date='2003-01-01',
 )
 
-HealthAndSportsDay = Holiday(
-    "Health and Sports Day",
+HealthAndSportsDayThrough2019 = Holiday(
+    "Health and Sports Day (through 2019)",
     month=10,
     day=1,
     offset=DateOffset(weekday=MO(2)),
+    end_date="2020-01-01",
+)
+
+# Changed due to Tokyo Olympics
+HealthAndSportsDay2020 = Holiday(
+    "Health and Sports Day (2020)",
+    month=7,
+    day=24,
+    year=2020,
+)
+
+HealthAndSportsDay2021Onwards = Holiday(
+    "Health and Sports Day (2021 onwards)",
+    month=10,
+    day=1,
+    offset=DateOffset(weekday=MO(2)),
+    start_date="2021-01-01",
 )
 
 CultureDay = Holiday(
@@ -285,3 +331,10 @@ NewYearsHolidayDec31 = Holiday(
     month=12,
     day=31,
 )
+
+Misc2019Holidays = [
+    Timestamp('2019-04-30'),  # Abdication Day
+    Timestamp('2019-05-01'),  # Accession Day
+    Timestamp('2019-05-02'),  # Citizen's Holiday
+    Timestamp('2019-10-22'),  # Enthronement Ceremony
+]

@@ -14,7 +14,7 @@
 # limitations under the License.
 
 from datetime import time
-from pandas import Timestamp
+import pandas as pd
 from pandas.tseries.holiday import (
     DateOffset,
     EasterMonday,
@@ -43,38 +43,70 @@ from .trading_calendar import (
 # New Year's Day
 LSENewYearsDay = new_years_day(observance=weekend_to_monday)
 
-# Early May bank holiday
-MayBank = Holiday(
+# Early May bank holiday has two exceptions based on the 50th and 75th
+# anniversary of VE-Day
+# 1995-05-01 Early May bank holiday removed for VE-day 50th anniversary
+# 2020-05-04 Early May bank holiday removed for VE-day 75th anniversary
+
+# Early May bank holiday pre-1995
+MayBank_pre_1995 = Holiday(
     "Early May Bank Holiday",
     month=5,
     offset=DateOffset(weekday=MO(1)),
     day=1,
+    end_date=pd.Timestamp('1994-12-31'),
 )
-# Spring bank holiday is the last Monday in May except:
-# - in 2002, it was moved to June 3
-# - in 2012, it was moved to June 4
-SpringBankBefore2002 = Holiday(
+
+# Early May bank holiday post-1995 and pre-2020
+MayBank_post_1995_pre_2020 = Holiday(
+    "Early May Bank Holiday",
+    month=5,
+    offset=DateOffset(weekday=MO(1)),
+    day=1,
+    start_date=pd.Timestamp('1996-01-01'),
+    end_date=pd.Timestamp('2019-12-31'),
+)
+
+# Early May bank holiday post 2020
+MayBank_post_2020 = Holiday(
+    "Early May Bank Holiday",
+    month=5,
+    offset=DateOffset(weekday=MO(1)),
+    day=1,
+    start_date=pd.Timestamp('2021-01-01')
+)
+
+
+# Spring bank holiday has two exceptions based on the Golden & Diamond Jubilee
+# 2002-05-27 Spring bank holiday removed for Golden Jubilee
+# 2012-05-28 Spring bank holiday removed for Diamond Jubilee
+
+# Spring bank holiday
+SpringBank_pre_2002 = Holiday(
     "Spring Bank Holiday",
     month=5,
     day=31,
     offset=DateOffset(weekday=MO(-1)),
-    end_date="2002-01-01",
+    end_date=pd.Timestamp('2001-12-31'),
 )
-SpringBank2002To2012 = Holiday(
+
+SpringBank_post_2002_pre_2012 = Holiday(
     "Spring Bank Holiday",
     month=5,
     day=31,
     offset=DateOffset(weekday=MO(-1)),
-    start_date="2003-01-01",
-    end_date="2012-01-01",
+    start_date=pd.Timestamp('2003-01-01'),
+    end_date=pd.Timestamp('2011-12-31'),
 )
-SpringBank2013Onwards = Holiday(
+
+SpringBank_post_2012 = Holiday(
     "Spring Bank Holiday",
     month=5,
     day=31,
     offset=DateOffset(weekday=MO(-1)),
-    start_date="2013-01-01",
+    start_date=pd.Timestamp('2013-01-01'),
 )
+
 # Summer bank holiday
 SummerBank = Holiday(
     "Summer Bank Holiday",
@@ -102,21 +134,22 @@ ChristmasEve = Holiday(
     observance=previous_friday,
 )
 # New Year's eve (or the preceding Friday if it falls on a weekend)
-# is a half day.
-NewYearsEve = Holiday(
+# is a half day. Except for 1999-12-31, when the Queen declared a
+# bank holiday.
+NewYearsEvePre1999 = Holiday(
     "New Year's Eve Early Close",
     month=12,
     day=31,
     observance=previous_friday,
+    end_date=pd.Timestamp('1999-01-01')
 )
-
-# Ad Hoc Closes
-# -------------
-SpringBank2002 = Timestamp("2002-06-03", tz="UTC")
-GoldenJubilee = Timestamp("2002-06-04", tz="UTC")
-RoyalWedding = Timestamp("2011-04-29", tz="UTC")
-SpringBank2012 = Timestamp("2012-06-04", tz="UTC")
-DiamondJubilee = Timestamp("2012-06-05", tz="UTC")
+NewYearsEvePost2000 = Holiday(
+    "New Year's Eve Early Close",
+    month=12,
+    day=31,
+    observance=previous_friday,
+    start_date=pd.Timestamp('2000-01-01')
+)
 
 
 class XLONExchangeCalendar(TradingCalendar):
@@ -162,10 +195,12 @@ class XLONExchangeCalendar(TradingCalendar):
             LSENewYearsDay,
             GoodFriday,
             EasterMonday,
-            MayBank,
-            SpringBankBefore2002,
-            SpringBank2002To2012,
-            SpringBank2013Onwards,
+            MayBank_pre_1995,
+            MayBank_post_1995_pre_2020,
+            MayBank_post_2020,
+            SpringBank_pre_2002,
+            SpringBank_post_2002_pre_2012,
+            SpringBank_post_2012,
             SummerBank,
             Christmas,
             WeekendChristmas,
@@ -176,11 +211,28 @@ class XLONExchangeCalendar(TradingCalendar):
     @property
     def adhoc_holidays(self):
         return [
-            SpringBank2002,
-            GoldenJubilee,
-            RoyalWedding,
-            SpringBank2012,
-            DiamondJubilee,
+            # VE-Day Anniversary
+            pd.Timestamp("1995-05-08", tz='UTC'),  # 50th Anniversary
+            pd.Timestamp("2020-05-08", tz='UTC'),  # 75th Anniversary
+            # Queen Elizabeth II Jubilees
+            # Silver Jubilee
+            pd.Timestamp("1977-06-07", tz='UTC'),
+            # Golden Jubilee
+            pd.Timestamp("2002-06-03", tz='UTC'),
+            pd.Timestamp("2002-06-04", tz='UTC'),
+            # Diamond Jubilee
+            pd.Timestamp("2012-06-04", tz='UTC'),
+            pd.Timestamp("2012-06-05", tz='UTC'),
+            # Royal Weddings
+            # Wedding Day of Princess Anne and Mark Phillips
+            pd.Timestamp("1973-11-14", tz='UTC'),
+            # Wedding Day of Prince Charles and Diana Spencer
+            pd.Timestamp("1981-07-29", tz='UTC'),
+            # Wedding Day of Prince William and Catherine Middleton
+            pd.Timestamp("2011-04-29", tz='UTC'),
+            # Miscellaneous
+            # Eve of 3rd Millenium A.D.
+            pd.Timestamp("1999-12-31", tz='UTC'),
         ]
 
     @property
@@ -188,6 +240,7 @@ class XLONExchangeCalendar(TradingCalendar):
         return [
             (self.regular_early_close, HolidayCalendar([
                 ChristmasEve,
-                NewYearsEve,
+                NewYearsEvePre1999,
+                NewYearsEvePost2000,
             ]))
         ]
